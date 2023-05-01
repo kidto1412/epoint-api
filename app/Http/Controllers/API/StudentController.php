@@ -46,7 +46,7 @@ class StudentController extends Controller
                 throw new \Exception('Invalid Credentials');
             }
 
-            $tokenResult = $student->createToken('studentToken')->plainTextToken;
+            $tokenResult = $student->createToken('authToken')->plainTextToken;
 
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,

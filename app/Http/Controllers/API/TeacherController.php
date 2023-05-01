@@ -10,25 +10,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+use App\Actions\Fortify\PasswordValidationRules;
+//use App\Helpers\ResponseFormatter;
+
 class TeacherController extends Controller
 {
+    use PasswordValidationRules;
     //
     public function login(Request $request)
     {
         try {
             $request->validate([
-                'email' => 'required',
+                'nip' => 'required',
                 'password' => 'required'
             ]);
 
-            $credentials = request(['nis', 'password']);
-            if (!Auth::attempt($credentials)) {
-                return ResponseFormatter::error([
-                    'message' => 'Unauthorized'
-                ],'Authentication Failed', 500);
-            }
+            $credentials = request(['nip', 'password']);
+//            if (!Auth::attempt($credentials)) {
+//                return ResponseFormatter::error([
+//                    'message' => 'Unauthorized'
+//                ],'Authentication Failed', 500);
+//            }
 
-            $teacher = Teacher::where('nis', $request->nis)->first();
+            $teacher = Teacher::where('nip', $request->nip)->first();
             if (!Hash::check($request->password, $teacher->password, [])) {
                 throw new \Exception('Invalid Credentials');
             }
@@ -56,14 +60,14 @@ class TeacherController extends Controller
             ]);
 
             Teacher::create([
-                'nip' => $request->nis,
+                'nip' => $request->nip,
                 'name' => $request->name,
                 'password' => Hash::make($request->password),
             ]);
 
             $teacher = Teacher::where('nip', $request->nip)->first();
 
-            $tokenResult = $teacher->createToken('authToken ')->plainTextToken;
+            $tokenResult = $teacher->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
