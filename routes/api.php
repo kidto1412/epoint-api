@@ -26,6 +26,8 @@ Route::post('register', [\App\Http\Controllers\API\UserController::class, 'regis
 Route::post('login-student', [\App\Http\Controllers\API\StudentController::class, 'login']);
 Route::post('register-student', [\App\Http\Controllers\API\StudentController::class, 'register']);
 
+
+Route::get('students',[\App\Http\Controllers\API\StudentController::class,'all']);
 Route::get('class-room',[\App\Http\Controllers\API\ClassRoomController::class,'all']);
 Route::get('form-of-foul',[\App\Http\Controllers\API\FormOfFoulController::class,'all']);
 Route::get('foul-categories',[\App\Http\Controllers\API\FoulCategoryController::class,'all']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
 use App\Actions\Fortify\PasswordValidationRules;
 use App\Helpers\ResponseFormatter;
@@ -14,32 +15,39 @@ use Illuminate\Support\Facades\Validator;
 class StudentController extends Controller
 {
     use PasswordValidationRules;
-    //
-    public function fetch(Request $request): \Illuminate\Http\JsonResponse
+
+
+    public function fetch(Request $request)
     {
-        return ResponseFormatter::success($request->student(),'Data profile student berhasil diambil');
+        return ResponseFormatter::success($request->Student::student(),'Data profile user berhasil diambil');
     }
     public function login(Request $request)
     {
         try {
             $request->validate([
-                'email' => 'email|required',
+                'nis' => 'required',
                 'password' => 'required'
             ]);
 
-            $credentials = request(['email', 'password']);
-            if (!Auth::attempt($credentials)) {
-                return ResponseFormatter::error([
-                    'message' => 'Unauthorized'
-                ],'Authentication Failed', 500);
-            }
+            $credentials = $request->validate([
+                'nis' => ['required', 'string'],
+                'password' => ['required', 'string'],
+            ]);
 
-            $student = Student::where('email', $request->email)->first();
-            if ( ! Hash::check($request->password, $student->password, [])) {
+//            if (!Auth::attempt($credentials)) {
+//                return ResponseFormatter::error([
+//                    'message' => 'Unauthorized'
+//                ],'Authentication Failed', 500);
+//            }
+
+            $student = Student::where('nis', $request->nis)->first();
+
+            if (!$student || !Hash::check($request->password, $student->password, [])) {
                 throw new \Exception('Invalid Credentials');
             }
 
-            $tokenResult = $student->createToken('authToken')->plainTextToken;
+            $tokenResult = $student->createToken('studentToken')->plainTextToken;
+
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
@@ -58,34 +66,29 @@ class StudentController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
-    public function register(Request $request)
+    public function register(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $request->validate([
+                'nis' => ['required', 'string', 'max:255'],
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'password' => $this->passwordRules()
             ]);
 
-            User::create([
+            Student::create([
+                'nis' => $request->nis,
                 'name' => $request->name,
-                'email' => $request->email,
-                'address' => $request->address,
-                'houseNumber' => $request->houseNumber,
-                'phoneNumber' => $request->phoneNumber,
-                'city' => $request->city,
                 'password' => Hash::make($request->password),
             ]);
 
-            $student = User::where('email', $request->email)->first();
+            $student = Student::where('nis', $request->nis)->first();
 
-            $tokenResult = $student->createToken('authToken')->plainTextToken;
-
+            $tokenResult = $student->createToken('authToken ')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
                 'student' => $student
-            ],'User Registered');
+            ],'Student Registered');
         } catch (Exception $error) {
             return ResponseFormatter::error([
                 'message' => 'Something went wrong',
@@ -94,44 +97,48 @@ class StudentController extends Controller
         }
     }
 
+    public function all(Request $request)
+    {
+        $nis = $request->input('nis');
+        $limit = $request->input('limit', 6);
+        $name = $request->input('name');
+
+
+        if($nis)
+        {
+            $student = Student::find($nis);
+
+            if($student)
+                return ResponseFormatter::success(
+                    $student,
+                    'Data student berhasil diambil'
+                );
+            else
+                return ResponseFormatter::error(
+                    null,
+                    'Data student tidak ada',
+                    404
+                );
+        }
+
+        $student = Student::query();
+
+        if($name)
+            $student->where('name', 'like', '%' . $name . '%');
+
+
+
+        return ResponseFormatter::success(
+            $student->paginate($limit),
+            'Data list  jurusan berhasil diambil'
+        );
+    }
+
     public function logout(Request $request)
     {
         $token = $request->student()->currentAccessToken()->delete();
 
         return ResponseFormatter::success($token,'Token Revoked');
-    }
-
-    public function updateProfile(Request $request)
-    {
-        $data = $request->all();
-
-        $student = Auth::student();
-        $student->update($data);
-
-        return ResponseFormatter::success($student,'Profile Updated');
-    }
-
-    public function updatePhoto(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|image|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return ResponseFormatter::error(['error'=>$validator->errors()], 'Update Photo Fails', 401);
-        }
-
-        if ($request->file('file')) {
-
-            $file = $request->file->store('assets/student', 'public');
-
-            //store your file into database
-            $student = Auth::student();
-            $student->profile_photo_path = $file;
-            $student->update();
-
-            return ResponseFormatter::success([$file],'File successfully uploaded');
-        }
     }
 
 }

@@ -68,11 +68,11 @@ class UserController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
-    public function register(Request $request)
+    public function register(Request $request,$guard)
     {
         try {
             $request->validate([
-                'name' => ['required', 'string', 'max:255'],
+                'name' => ['required', 'string', 'max:255'.$guard.'s'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'password' => $this->passwordRules()
             ]);
@@ -86,7 +86,7 @@ class UserController extends Controller
                 'city' => $request->city,
                 'password' => Hash::make($request->password),
             ]);
-
+            $user = new $guard;
             $user = User::where('email', $request->email)->first();
 
             $tokenResult = $user->createToken('authToken')->plainTextToken;

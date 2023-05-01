@@ -14,10 +14,10 @@ class CreateStudentsTable extends Migration
     public function up()
     {
         Schema::create('students', function (Blueprint $table) {
-//            $table->id();
-            $table->string('nis')->primary();
+            $table->id();
+            $table->string('nis')->unique();
             $table->text('name')->nullable();
-            $table->string('password')->nullable();
+            $table->string('password');
             $table->rememberToken();
             $table->date('date_and_place_of_birth')->nullable();
             $table->string('gender')->nullable();
