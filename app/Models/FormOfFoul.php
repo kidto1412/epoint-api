@@ -9,6 +9,6 @@ class FormOfFoul extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name', 'point','category_foul_id'
+       'id', 'name', 'point','category_foul_id'
     ];
 }

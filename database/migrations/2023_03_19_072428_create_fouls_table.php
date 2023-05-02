@@ -18,13 +18,19 @@ class CreateFoulsTable extends Migration
             $table->time('time')->nullable();
             $table->date('date')->nullable();
             $table->string('description')->nullable();
-            $table->string('student_nis')->nullable();
-            $table->string('teacher_nip')->nullable();
+            $table->string('student_nis');
+            $table->foreign('student_nis')->references('nis')->on('students')->onDelete('cascade') ;
+            $table->string('teacher_nip');
+            $table->foreign('teacher_nip')->references('nip')->on('teachers')->onDelete('cascade');
+            $table->string('form_of_foul_id');
+            $table->foreign('form_of_foul_id')->references('id')->on('form_of_fouls');
+
 
 
             $table->softDeletes();
             $table->timestamps();
         });
+
     }
 
     /**

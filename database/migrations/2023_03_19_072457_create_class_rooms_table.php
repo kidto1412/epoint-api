@@ -16,7 +16,9 @@ class CreateClassRoomsTable extends Migration
         Schema::create('class_rooms', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('grade')->nullable();
-            $table->string('major_id')->nullable();
+            $table->string('major_id');
+
+            $table->foreign('major_id')->references('id')->on('majors');
             $table->softDeletes();
             $table->timestamps();
         });

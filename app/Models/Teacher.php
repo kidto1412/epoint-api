@@ -14,7 +14,7 @@ class Teacher extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'nip','name','position', 'password','gender',
+      'id',  'nip','name','position', 'password','gender',
     ];
     protected $table = 'teachers';
     use Notifiable;

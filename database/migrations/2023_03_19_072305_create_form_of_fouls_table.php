@@ -17,8 +17,9 @@ class CreateFormOfFoulsTable extends Migration
             $table->string('id')->primary();
             $table->string('name')->nullable();
             $table->integer('point')->nullable();
-            $table->string('category_foul_id')->nullable();
+            $table->string('category_foul_id');
 
+            $table->foreign('category_foul_id')->references('id')->on('foul_categories');
             $table->softDeletes();
             $table->timestamps();
         });

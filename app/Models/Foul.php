@@ -9,6 +9,6 @@ class Foul extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'time', 'date','description','student_nis','teacher_nip',
+       'id','time', 'date','description','student_nis','teacher_nip','id_form_of_foul',
     ];
 }
