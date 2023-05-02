@@ -13,10 +13,10 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Student extends Model
 {
-    public function student()
-    {
-        return $this->belongsTo(Student::class, 'tokenable_id');
-    }
+//    public function student()
+//    {
+//        return $this->belongsTo(Student::class, 'tokenable_id');
+//    }
 
     use Notifiable;
     use HasFactory;
