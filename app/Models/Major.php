@@ -12,4 +12,5 @@ class Major extends Model
     protected $fillable = [
        'id', 'name',
     ];
+    protected $guarded = [];
 }

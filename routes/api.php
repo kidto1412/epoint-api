@@ -33,4 +33,7 @@ Route::get('students',[\App\Http\Controllers\API\StudentController::class,'all']
 Route::get('class-room',[\App\Http\Controllers\API\ClassRoomController::class,'all']);
 Route::get('form-of-foul',[\App\Http\Controllers\API\FormOfFoulController::class,'all']);
 Route::get('foul-categories',[\App\Http\Controllers\API\FoulCategoryController::class,'all']);
-Route::get('major',[\App\Http\Controllers\API\MajorController::class,'all']);
+
+
+Route::resource('majors',\App\Http\Controllers\API\MajorController::class);
+
