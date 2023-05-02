@@ -37,3 +37,4 @@ Route::get('form-of-foul',[\App\Http\Controllers\API\FormOfFoulController::class
 Route::resource('majors',\App\Http\Controllers\API\MajorController::class);
 Route::resource('class-room',\App\Http\Controllers\API\ClassRoomController::class);
 Route::resource('foul-categories',\App\Http\Controllers\API\FoulCategoryController::class);
+

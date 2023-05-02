@@ -51,11 +51,11 @@ class FoulCategoryController extends Controller
     }
     public function index(Request $request)
     {
-        $classRoom = ClassRoom::all();
+        $foulCategory = FoulCategory::all();
         return response()->json([
             "success" => true,
-            "message" => "Product List",
-            "data" => $classRoom
+            "message" => "Foul List",
+            "data" => $foulCategory
         ]);
     }
     public function store(Request $request)
@@ -63,18 +63,18 @@ class FoulCategoryController extends Controller
         $input = $request->all();
         $validator = Validator::make($input, [
             'id' => 'required',
-            'grade' => 'required',
-            'major_id' => 'required'
+            'name' => 'required',
+
         ]);
         if($validator->fails()){
             return $this->sendError('Validation Error.', $validator->errors());
         }
-        $classRoom = ClassRoom::create($input);
-        if ($classRoom){
+        $foulCategory = FoulCategory::create($input);
+        if ($foulCategory){
             return response()->json([
                 "success" => true,
-                "message" => "Class room created successfully.",
-                "data" => $classRoom
+                "message" => "Foul category created successfully.",
+                "data" => $foulCategory
             ]);
         } else {
             return response()->json([
@@ -85,42 +85,40 @@ class FoulCategoryController extends Controller
     }
     public function show($id)
     {
-        $classRoom = ClassRoom::find($id);
-        if (is_null($classRoom)) {
-            return $this->sendError('Class Room not found.');
+        $foulCategory = FoulCategory::find($id);
+        if (is_null($foulCategory)) {
+            return $this->sendError('Foul category not found.');
         }
         return response()->json([
             "success" => true,
-            "message" => "Class Room retrieved successfully.",
-            "data" => $classRoom
+            "message" => "Foul category retrieved successfully.",
+            "data" => $foulCategory
         ]);
     }
-    public function update(Request $request, ClassRoom $classRoom)
+    public function update(Request $request, FoulCategory $foulCategory)
     {
         $input = $request->all();
         $validator = Validator::make($input, [
-            'grade' => 'required',
-            'major_id' => 'required'
+            'name' => 'required'
         ]);
         if($validator->fails()){
             return $this->sendError('Validation Error.', $validator->errors());
         }
-        $classRoom->grade = $input['grade'];
-        $classRoom->major_id = $input['major_id'];
-        $classRoom->save();
+        $foulCategory->name = $input['name'];
+        $foulCategory->save();
         return response()->json([
             "success" => true,
-            "message" => "Class room updated successfully.",
-            "data" => $classRoom
+            "message" => "Foul Category room updated successfully.",
+            "data" => $foulCategory
         ]);
     }
-    public function destroy(ClassRoom $classRoom)
+    public function destroy(FoulCategory $foulCategory)
     {
-        $classRoom->delete();
+        $foulCategory->delete();
         return response()->json([
             "success" => true,
-            "message" => "Major deleted successfully.",
-            "data" => $classRoom
+            "message" => "Foul category deleted successfully.",
+            "data" => $foulCategory
         ]);
     }
 }
