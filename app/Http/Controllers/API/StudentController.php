@@ -47,7 +47,6 @@ class StudentController extends Controller
             }
 
             $tokenResult = $student->createToken('authToken')->plainTextToken;
-
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',

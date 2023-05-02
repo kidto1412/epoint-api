@@ -17,7 +17,6 @@ class CreateClassRoomsTable extends Migration
             $table->string('id')->primary();
             $table->string('grade')->nullable();
             $table->string('major_id')->nullable();
-
             $table->softDeletes();
             $table->timestamps();
         });

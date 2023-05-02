@@ -30,10 +30,10 @@ Route::post('login-teacher', [\App\Http\Controllers\API\TeacherController::class
 Route::post('register-teacher', [\App\Http\Controllers\API\TeacherController::class, 'register']);
 
 Route::get('students',[\App\Http\Controllers\API\StudentController::class,'all']);
-Route::get('class-room',[\App\Http\Controllers\API\ClassRoomController::class,'all']);
+
 Route::get('form-of-foul',[\App\Http\Controllers\API\FormOfFoulController::class,'all']);
-Route::get('foul-categories',[\App\Http\Controllers\API\FoulCategoryController::class,'all']);
 
 
 Route::resource('majors',\App\Http\Controllers\API\MajorController::class);
-
+Route::resource('class-room',\App\Http\Controllers\API\ClassRoomController::class);
+Route::resource('foul-categories',\App\Http\Controllers\API\FoulCategoryController::class);

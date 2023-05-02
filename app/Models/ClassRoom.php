@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ClassRoom extends Model
 {
     use HasFactory;
-    protected $fillable = [
-        'grade', 'major_id'
+    protected $keyType = 'string';
+    protected $fillable = ['id','grade', 'major_id'
     ];
+    protected $guarded = [];
 }
