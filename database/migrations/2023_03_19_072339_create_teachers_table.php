@@ -21,6 +21,9 @@ class CreateTeachersTable extends Migration
             $table->text('name')->nullable();
             $table->date('position')->nullable();
             $table->string('gender')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->date('date_and_place_of_birth')->nullable();
+            $table->text('address')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

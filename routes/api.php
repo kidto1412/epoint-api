@@ -18,6 +18,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('user', [\App\Http\Controllers\API\UserController::class, 'fetch']);
     Route::post('user', [\App\Http\Controllers\API\UserController::class, 'updateProfile']);
     Route::post('logout', [\App\Http\Controllers\API\UserController::class, 'logout']);
+    Route::resource('majors',\App\Http\Controllers\API\MajorController::class);
+    Route::resource('class-room',\App\Http\Controllers\API\ClassRoomController::class);
+    Route::resource('foul-categories',\App\Http\Controllers\API\FoulCategoryController::class);
+    Route::post('add-student',[\App\Http\Controllers\API\StudentController::class, 'store']);
+    Route::post('parents', [\App\Http\Controllers\API\ParentsController::class, 'addParents']);
+    Route::resource('form-of-foul',\App\Http\Controllers\API\FormOfFoulController::class);
 });
 
 Route::post('login', [\App\Http\Controllers\API\UserController::class, 'login']);
@@ -29,12 +35,10 @@ Route::post('register-student', [\App\Http\Controllers\API\StudentController::cl
 Route::post('login-teacher', [\App\Http\Controllers\API\TeacherController::class, 'login']);
 Route::post('register-teacher', [\App\Http\Controllers\API\TeacherController::class, 'register']);
 
+
 Route::get('students',[\App\Http\Controllers\API\StudentController::class,'all']);
 
-Route::get('form-of-foul',[\App\Http\Controllers\API\FormOfFoulController::class,'all']);
 
 
-Route::resource('majors',\App\Http\Controllers\API\MajorController::class);
-Route::resource('class-room',\App\Http\Controllers\API\ClassRoomController::class);
-Route::resource('foul-categories',\App\Http\Controllers\API\FoulCategoryController::class);
+
 

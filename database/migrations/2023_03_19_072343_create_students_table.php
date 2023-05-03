@@ -22,6 +22,7 @@ class CreateStudentsTable extends Migration
             $table->date('date_and_place_of_birth')->nullable();
             $table->string('gender')->nullable();
             $table->string('phone_number')->nullable();
+            $table->text('address')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
 
             $table->softDeletes();
