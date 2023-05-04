@@ -37,7 +37,7 @@ class Student extends Model
 
 
     protected $fillable = [
-       'id', 'nis', 'name', 'username','password',
+       'id', 'nis', 'name', 'username','password','date_and_place_of_birth','gender','phone_number','address','profile_photo_path'
     ];
 
     /**

@@ -22,9 +22,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('class-room',\App\Http\Controllers\API\ClassRoomController::class);
     Route::resource('foul-categories',\App\Http\Controllers\API\FoulCategoryController::class);
     Route::post('add-student',[\App\Http\Controllers\API\StudentController::class, 'store']);
-    Route::post('parents', [\App\Http\Controllers\API\ParentsController::class, 'addParents']);
+    Route::resource('parents', \App\Http\Controllers\API\ParentsController::class);
     Route::resource('form-of-foul',\App\Http\Controllers\API\FormOfFoulController::class);
+    Route::resource('foul',\App\Http\Controllers\API\FoulController::class);
+    Route::resource('students',\App\Http\Controllers\API\StudentController::class);
+    Route::resource('teachers',\App\Http\Controllers\API\TeacherController::class);
 });
+
+//Route::middleware(['teachers'])->group(function () {
+//    Route::resource('foul',\App\Http\Controllers\API\FormOfFoulController::class);
+//    Route::resource('students',\App\Http\Controllers\API\StudentController::class);
+//    Route::resource('teachers',\App\Http\Controllers\API\TeacherController::class);
+//});
 
 Route::post('login', [\App\Http\Controllers\API\UserController::class, 'login']);
 Route::post('register', [\App\Http\Controllers\API\UserController::class, 'register']);

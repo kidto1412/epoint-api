@@ -25,6 +25,7 @@ class CreateStudentsTable extends Migration
             $table->text('address')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
 
+            $table->foreign('id_parent')->references('id')->on('parents');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -37,6 +38,10 @@ class CreateStudentsTable extends Migration
      */
     public function down()
     {
+        Schema::table('student', function (Blueprint $table) {
+            $table->dropForeign(['id_parent']);
+            $table->dropColumn('id_parent');
+        });
         Schema::dropIfExists('students');
     }
 }
