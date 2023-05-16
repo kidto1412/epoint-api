@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Models\Parents;
 use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
@@ -19,6 +20,16 @@ class TeacherController extends Controller
 {
     use PasswordValidationRules;
     //
+    public function index(Request $request)
+    {
+        //
+        $teacher = Teacher::paginate(5);
+        return response()->json([
+            "success" => true,
+            "message" => "Teacher List",
+            "data" => $teacher
+        ]);
+    }
     public function login(Request $request)
     {
         try {
@@ -43,7 +54,7 @@ class TeacherController extends Controller
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
-                'teacher' => $teacher
+                'data' => $teacher
             ],'Authenticated');
         } catch (Exception $error) {
             return ResponseFormatter::error([
@@ -103,7 +114,7 @@ class TeacherController extends Controller
 
             $teacher = Teacher::create([
                     'nip' => $request->nip,
-                    'password' => $request->password,
+                    'password' => Hash::make($request->password),
 //                    'password' => Hash::make($password),
                     'name' => $request->name,
                     'position' => $request->position,

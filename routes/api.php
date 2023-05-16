@@ -27,12 +27,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('foul',\App\Http\Controllers\API\FoulController::class);
     Route::resource('students',\App\Http\Controllers\API\StudentController::class);
     Route::resource('teachers',\App\Http\Controllers\API\TeacherController::class);
+    Route::get('student/{nis}',[\App\Http\Controllers\API\StudentController::class,'getStudentData']);
+    Route::get('point/students',[\App\Http\Controllers\API\StudentController::class,'getDataStudents']);
 });
 
-//Route::middleware(['teachers'])->group(function () {
-//    Route::resource('foul',\App\Http\Controllers\API\FormOfFoulController::class);
-//    Route::resource('students',\App\Http\Controllers\API\StudentController::class);
-//    Route::resource('teachers',\App\Http\Controllers\API\TeacherController::class);
+//Route::middleware(['auth:teacher-api'])->group(function () {
+//    Route::get('point/students',[\App\Http\Controllers\API\StudentController::class,'getDataStudents']);
+//});
+//
+//Route::middleware(['auth:sanctum','student-api'])->group(function () {
+//    Route::get('student/{nis}',[\App\Http\Controllers\API\StudentController::class,'getStudentData']);
+//    Route::get('point/students',[\App\Http\Controllers\API\StudentController::class,'getDataStudents']);
+//});
+//Route::middleware(['auth:parent-api'])->group(function () {
+//    Route::get('student/{nis}',[\App\Http\Controllers\API\StudentController::class,'getStudentData']);
+//    Route::get('point/students',[\App\Http\Controllers\API\StudentController::class,'getDataStudents']);
 //});
 
 Route::post('login', [\App\Http\Controllers\API\UserController::class, 'login']);
@@ -44,6 +53,10 @@ Route::post('register-student', [\App\Http\Controllers\API\StudentController::cl
 Route::post('login-teacher', [\App\Http\Controllers\API\TeacherController::class, 'login']);
 Route::post('register-teacher', [\App\Http\Controllers\API\TeacherController::class, 'register']);
 
+
+
+Route::post('login-parent', [\App\Http\Controllers\API\ParentsController::class, 'login']);
+Route::post('register-parent', [\App\Http\Controllers\API\ParentsController::class, 'register']);
 
 Route::get('students',[\App\Http\Controllers\API\StudentController::class,'all']);
 

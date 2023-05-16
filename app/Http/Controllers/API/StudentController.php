@@ -47,6 +47,7 @@ class StudentController extends Controller
                 throw new \Exception('Invalid Credentials');
             }
 
+
             $tokenResult = $student->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
@@ -178,7 +179,8 @@ class StudentController extends Controller
                     'phone_number'=> $request->phone_number,
                     'address' => $request->address,
                     'profile_photo_path' => $request->profile_photo_path,
-                    'id_parent' => $request->id_parent
+                    'id_parent' => $request->id_parent,
+                    'id_class_room' => $request->id_class_room
                 ]
             );
 //            $parents = Parents::where('id', $request->id)->first();
@@ -233,6 +235,178 @@ class StudentController extends Controller
         ]);
     }
 
+    public function getStudentData($nis)
+    {
+
+        // Bobot untuk kriteria Sikap dan Perilaku
+        $bobot_sp = 0.5;
+
+        // Bobot untuk kriteria Kerajinan
+        $bobot_kj = 0.25;
+
+        // Bobot untuk kriteria Kerapian
+        $bobot_kp = 0.25;
+
+        $totalPoint = 0;
+        $spPoint = 0;
+        $kjPoint = 0;
+        $kpPoint = 0;
+
+        $student = Student::where('nis', $nis)
+            ->with('class.major','parent', 'violations.form.category', 'violations.teacher')
+            ->first();
+
+//        foreach ($student->violations as $violation) {
+//            $point = $violation->form->point;
+//
+//            switch ($violation->form->category_foul_id) {
+//                case 'FC01':
+//                    if ($point == 100) {
+//                        $spPoint += 100;
+//                    } else if ($point == 50) {
+//                        $spPoint += 50;
+//                    } else if ($point == 30) {
+//                        $spPoint += 30;
+//                    } else if ($point == 15) {
+//                        $spPoint += 15;
+//                    } else if ($point == 10) {
+//                        $spPoint += 10;
+//                    } else if ($point == 5) {
+//                        $spPoint += 5;
+//                    }
+//                    break;
+//
+//                case 'FC02':
+//                    if ($point == 100) {
+//                        $kjPoint += 100;
+//                    } else if ($point == 50) {
+//                        $kjPoint += 50;
+//                    } else if ($point == 30) {
+//                        $kjPoint += 30;
+//                    } else if ($point == 15) {
+//                        $kjPoint += 15;
+//                    } else if ($point == 10) {
+//                        $kjPoint += 10;
+//                    } else if ($point == 5) {
+//                        $kjPoint += 5;
+//                    }
+//                    break;
+//
+//                case 'FC03':
+//                    if ($point == 100) {
+//                        $kpPoint += 100;
+//                    } else if ($point == 50) {
+//                        $kpPoint += 50;
+//                    } else if ($point == 30) {
+//                        $kpPoint += 30;
+//                    } else if ($point == 15) {
+//                        $kpPoint += 15;
+//                    } else if ($point == 10) {
+//                        $kpPoint += 10;
+//                    } else if ($point == 5) {
+//                        $kpPoint += 5;
+//                    }
+//                    break;
+//            }
+//        }
+//        $totalPoint = ($spPoint * 0.5) + ($kjPoint * 0.25) + ($kpPoint * 0.25);
+
+//        $totalPoint += student->violations->point * $student->violationType->violationCategory->weight;
+        foreach ($student->violations as $violation){
+//            $weight = 0;
+//            if ($violation->form->category_foul_id == 'FC01'){
+//                $weight = $bobot_sp;
+//            } elseif ($violation->form->category_foul_id == 'FC02'){
+//                $weight = $bobot_kj;
+//            } elseif ($violation->form->category_foul_id == 'FC03'){
+//                $weight = $bobot_kp ;
+//            }
+            $point = $violation->form->point;
+            $totalPoint +=  $point;
+        }
+        return response()->json([
+            "success" => true,
+            "message" => "Data Student",
+            "data" => [
+//                'violation' => $violation,
+                'nis' => $student->nis,
+                'name' => $student->name,
+                'parent_name' => $student->parent->name,
+                'class' => $student->class->grade,
+                'major' => $student->class->major->name,
+//                'time' => $student->violations->time,
+//                'date' => $student->violations->date,
+//                'description' =>$student->violations->description,
+                'fouls' => $this->formatViolations($student->violations),
+                "total_point" => $totalPoint
+            ]
+        ]);
+    }
+
+    public function getDataStudents()
+    {
+//
+//        $students = Student::with('class.major','parent', 'violations.form.category', 'violations.teacher')
+//            ->get();
+//
+//        $formatted_students = [];
+//
+//        foreach ($students as $student){
+//            $totalPoint = 0;
+//            foreach ($student->violations as $violation){
+//                $point = $violation->form->point;
+//                $totalPoint +=  $point;
+//            }
+//            $formatted_students[] = [
+//                'nis' => $student->nis,
+//                'name' => $student->name,
+//                'parent_name' => $student->parent->name,
+//                'class' => $student->class->grade,
+//                'major' => $student->class->major->name,
+//                'total_point' => $totalPoint,
+//                'fouls' => $this->formatViolations($student->violations),
+//            ];
+//        }
+//
+//        return response()->json([
+//            "success" => true,
+//            "message" => "Data Student",
+//            "data" => $formatted_students,
+//        ]);
+
+        // Verifikasi bahwa user autentikasi adalah siswa
+        if (Auth::guard('students')->check()) {
+            // Ambil data siswa yang sedang login
+            $student = Auth::guard('students')->user();
+
+            // Kirimkan data siswa dalam respons JSON
+            return response()->json($student);
+        } else {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+    }
+
+    private function formatViolations($violations)
+    {
+        $formatted = [];
+
+        foreach ($violations as $violation) {
+            $formatted[] = [
+                'id' => $violation->id,
+                'date' => $violation->date,
+                'time' => $violation->time,
+                'description' => $violation->description,
+                'form_violation_name' => $violation->form->name,
+                'point'=> $violation->form->point,
+                'category' => $violation->form->category->name,
+                'teacher_name' => $violation->teacher->name,
+                'teacher_nip' => $violation->teacher->nip,
+            ];
+        }
+
+        return $formatted;
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -266,6 +440,7 @@ class StudentController extends Controller
         $student->address = $input['address'];
         $student->profile_photo_path = $input['profile_photo_path'];
         $student->id_parent = $input['id_parent'];
+        $student->id_class_room = $input['id_class_room'];
         $student->save();
         return response()->json([
             "success" => true,

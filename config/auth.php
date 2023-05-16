@@ -40,29 +40,21 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'student' => [
+        'user' => [
             'driver' => 'session',
-            'provider' => 'students',
+            'provider' => 'users',
         ],
         'student-api' => [
-            'driver' => 'token',
+            'driver' => 'session',
             'provider' => 'students',
         ],
-        'user' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-        'user-api' => [
-            'driver' => 'token',
-            'provider' => 'users',
-        ],
-        'user' => [
-            'driver' => 'session',
-            'provider' => 'teachers',
-        ],
         'teacher-api' => [
-            'driver' => 'token',
+            'driver' => 'session',
             'provider' => 'teachers',
+        ],
+        'parent-api' => [
+            'driver' => 'session',
+            'provider' => 'parents',
         ],
     ],
 
@@ -96,6 +88,11 @@ return [
              'driver' => 'eloquent',
              'model' => App\Models\Teacher::class,
          ],
+        'parents' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Parents::class,
+        ],
+
     ],
 
     /*
@@ -132,7 +129,5 @@ return [
     | confirmation screen. By default, the timeout lasts for three hours.
     |
     */
-
     'password_timeout' => 10800,
-
 ];

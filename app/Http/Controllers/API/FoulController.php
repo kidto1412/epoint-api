@@ -55,7 +55,7 @@ class FoulController extends Controller
         $validator = Validator::make($input, [
             'time' => 'required',
             'date' => 'required',
-            'description'=> 'required',
+                'description'=> 'required',
             'student_nis'=> 'required',
             'teacher_nip'=> 'required',
             'form_of_foul_id'=> 'required'

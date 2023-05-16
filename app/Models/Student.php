@@ -10,8 +10,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
-
-class Student extends Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class Student extends Authenticatable
 {
 //    public function student()
 //    {
@@ -33,11 +33,11 @@ class Student extends Model
      * @var string[]
      */
     protected $table = 'students';
-    protected $guard = 'student';
+    protected $guard = 'students';
 
 
     protected $fillable = [
-       'id', 'nis', 'name', 'username','password','date_and_place_of_birth','gender','phone_number','address','profile_photo_path'
+       'id', 'nis', 'name', 'username','password','date_and_place_of_birth','gender','phone_number','address','profile_photo_path','id_parent','id_class_room'
     ];
 
     /**
@@ -65,4 +65,18 @@ class Student extends Model
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function parent(){
+        return $this->belongsTo(Parents::class,'id_parent');
+    }
+
+    public function class(){
+        return $this->belongsTo(ClassRoom::class,'id_class_room');
+    }
+
+    public function violations(){
+        return $this->hasMany(Foul::class,'student_nis','nis');
+    }
+
+
 }

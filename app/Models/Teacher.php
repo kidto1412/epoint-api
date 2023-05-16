@@ -9,14 +9,18 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
-
-class Teacher extends Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class Teacher extends Authenticatable
 {
     use HasFactory;
+
     protected $fillable = [
-      'id',  'nip','name','position', 'password','gender',
+      'id', 'nip','name','position', 'password','gender','phone_number','date_and_place_of_birth','address',
     ];
+
     protected $table = 'teachers';
+//    protected $guard = 'teacher-api';
+
     use Notifiable;
     use HasFactory;
     use HasApiTokens;
@@ -33,5 +37,11 @@ class Teacher extends Model
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function fouls(){
+        return $this->hasMany(Foul::class);
+    }
+
+
 }
 
