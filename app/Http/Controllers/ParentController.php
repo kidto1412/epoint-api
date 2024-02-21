@@ -48,10 +48,39 @@ class ParentController extends Controller
 
         $parent->name = $request->get('name');
         $parent->username = $request->get('username');
-        $parent->password = \Hash::make($request->get('password'));
+        $parent->password = $request->get('password');
         $parent->date_and_place_of_birth = $request->get('date');
         $parent->phone_number = $request->get('phone');
         $parent->address = $request->get('address');
+
+        $curl = curl_init();
+
+        $target = $request->get('phone');
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+                'target' => $target,
+                'message' => 'Password:' . ' ' .$request->get('password'),
+            ),
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: fgopvgfewg_NYkr2HyFF"
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        $parent->password = \Hash::make($request->get('password'));
+
         $parent->save();
         return redirect()->route('parent.index');
     }
@@ -96,7 +125,7 @@ class ParentController extends Controller
 
         $parent->name = $request->get('name');
         $parent->username = $request->get('username');
-        $parent->password = Hash::make($request->get('password'));
+        $parent->password = \Hash::make($request->get('password'));
         $parent->date_and_place_of_birth = $request->get('date');
         $parent->phone_number = $request->get('phone');
         $parent->address = $request->get('address');

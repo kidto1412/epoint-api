@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 
 use App\Actions\Fortify\PasswordValidationRules;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 //use App\Helpers\ResponseFormatter;
 
@@ -53,8 +56,9 @@ class TeacherController extends Controller
             $tokenResult = $teacher->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
+                'role' => 'teacher',
                 'token_type' => 'Bearer',
-                'data' => $teacher
+                'teacher' => $teacher
             ],'Authenticated');
         } catch (Exception $error) {
             return ResponseFormatter::error([
@@ -163,18 +167,20 @@ class TeacherController extends Controller
      */
 
 
-    public function show($id)
+    public function show($nip)
     {
         //
-        $teacher = Teacher::find($id);
+        $teacher = Teacher::where('nip',$nip)->first();
         if (is_null($teacher)) {
             return $this->sendError('Student not found.');
         }
-        return response()->json([
-            "success" => true,
-            "message" => "Teacher retrieved successfully.",
-            "data" => $teacher
-        ]);
+        $tokenResult = $teacher->createToken('authToken')->plainTextToken;
+        return ResponseFormatter::success([
+            'access_token' => $tokenResult,
+            'role' => 'teacher',
+            'token_type' => 'Bearer',
+            'teacher' => $teacher
+        ],'Authenticated');
     }
 
     /**
@@ -188,20 +194,20 @@ class TeacherController extends Controller
     {
         //
         $input = $request->all();
-        $validator = Validator::make($input, [
-            'nip' => 'required',
-            'name' => 'required',
-            'password' => 'required',
-            'position' => 'required',
-            'date_and_place_of_birth'=> 'required',
-            'gender'=> 'required',
-            'phone_number'=> 'required',
-            'address'=> 'required',
-
-        ]);
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
+//        $validator = Validator::make($input, [
+//            'nip' => 'required',
+//            'name' => 'required',
+//            'password' => 'required',
+//            'position' => 'required',
+//            'date_and_place_of_birth'=> 'required',
+//            'gender'=> 'required',
+//            'phone_number'=> 'required',
+//            'address'=> 'required',
+//
+//        ]);
+//        if($validator->fails()){
+//            return $this->sendError('Validation Error.', $validator->errors());
+//        }
         $teacher->nip = $input['nip'];
         $teacher->password = $input['password'];
         $teacher->name = $input['name'];
@@ -219,6 +225,38 @@ class TeacherController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $data = $request->all();
+
+        $user = Auth::user();
+        $user->update($data);
+
+        return ResponseFormatter::success($user,'Profile Updated');
+    }
+
+    public function updatePhoto(Request $request, Teacher $teacher)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|image|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseFormatter::error(['error'=>$validator->errors()], 'Update Photo Fails', 401);
+        }
+
+        if ($request->file('file')) {
+
+            $file = $request->file->store('assets/images/parent', 'public');
+
+            //store your file into database;
+            $teacher->profile_photo_path = $file;
+            $teacher->update();
+
+            return ResponseFormatter::success([$file],'File successfully uploaded');
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -234,5 +272,112 @@ class TeacherController extends Controller
             "message" => "Teacher deleted successfully.",
             "data" => $teacher
         ]);
+    }
+    public function logout(Request $request, Student $student)
+    {
+        $token = $request->user()->currentAccessToken()->delete();
+        return ResponseFormatter::success($token,'Token Revoked');
+    }
+    public function recognize (Request $request){
+        // Menyimpan gambar dari permintaan ke penyimpanan sementara
+//        $request->validate([
+//            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Sesuaikan dengan jenis gambar yang diizinkan dan batasan ukuran
+//        ]);
+
+        $image = $request->file('image');
+        $imagePath = $image->store('temp');
+
+        // Pastikan file match_face.py berada di root project Laravel
+        $scriptPython = base_path('match_face.py');
+
+        // Pastikan Anda telah melakukan konfigurasi filesystem agar dapat menggunakan storage_path() dengan benar
+        $fullImagePath = storage_path('app/' . $imagePath);
+//        dd($fullImagePath);
+
+        // Panggil script Python menggunakan perintah shell_exec (atau bisa menggunakan Process)
+        $command = "python ". $scriptPython. " ". str_replace('/', '\\', $fullImagePath);
+//        dd($command);
+        $output = shell_exec($command . " 2>&1");
+//        dd($output);
+        // Output dari script Python berupa string JSON, jika benar
+        $result = json_decode($output, true);
+//        dd($result);
+        // Menghapus gambar dari penyimpanan sementara (jika diperlukan)
+         Storage::delete($imagePath);
+
+        // Mengembalikan hasil dari script Python sebagai respons API
+        return response()->json(['result' => $result]);
+    }
+
+
+    public function matchFaces(Request $request)
+    {
+        // Simpan gambar yang diterima dari Flutter
+        $image = $request->file('image');
+        $imagePath = $image->store('temp');
+        $pythonScript = base_path('cnn.py');
+        $fullImagePath = storage_path('app/' . $imagePath);
+
+//        putenv("MPLCONFIGDIR=" . storage_path('app/matplotlib_config'));
+
+        $process = new Process(['python', $pythonScript , str_replace('/' , '\\', $fullImagePath )]);
+//        dd($process);
+
+        $process->run();
+//        dd($process->run());
+        // Tangani hasil output yang diberikan oleh script Python
+
+        if (!$process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+
+
+        $output = $process->getOutput();
+//        dd($output);
+        $result = json_decode($output, true);
+//        dd($result);
+//        unlink(storage_path('app/'.$imagePath));
+
+        // Mengembalikan respons JSON
+        return response()->json(['output' => $output]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $this->validate($request, [
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|different:current_password',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        // Memeriksa apakah password saat ini benar
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Current password is wrong.'],
+            ])->status(401);
+        }
+
+        // Mengubah password pengguna
+        $user->password = Hash::make($request->new_password);
+        $token = $request->user()->currentAccessToken()->delete();
+        $user->save();
+//        "status" => 'success',
+//                'message_token' => $token,
+//                'message' => 'Update Password Success.',
+//                'data'=> $user
+        return response()->json(
+            [
+                'meta' => [
+                    'code' => 200,
+                    'status' => 'success',
+                    'message' => 'Update Password Success',
+                ],
+                'data' =>  $user,
+            ],200
+        );
+
+
     }
 }

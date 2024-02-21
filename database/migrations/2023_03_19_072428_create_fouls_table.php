@@ -26,7 +26,6 @@ class CreateFoulsTable extends Migration
             $table->foreign('form_of_foul_id')->references('id')->on('form_of_fouls');
 
 
-
             $table->softDeletes();
             $table->timestamps();
         });

@@ -8,8 +8,9 @@ use App\Models\FormOfFoul;
 use App\Models\Foul;
 use App\Models\FoulCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Http\Response;
 class FoulController extends Controller
 {
     //
@@ -49,22 +50,84 @@ class FoulController extends Controller
             'Data list  pelanggara berhasil diambil'
         );
     }
+    public function index(Request $request)
+    {
+        $limit = $request->input('limit',20);
+        $fouls = FormOfFoul::all();
+//        return response()->json([
+//            "success" => true,
+//            "message" => "Foul List",
+//            "data" => $formlOfFoul->paginage($limit)
+//        ]);
+        return ResponseFormatter::success(
+            $fouls,
+            'Foul list get successed'
+        );
+    }
     public function store(Request $request)
     {
         $input = $request->all();
+//        dd($input);
+
         $validator = Validator::make($input, [
             'time' => 'required',
             'date' => 'required',
-                'description'=> 'required',
+            'description'=> 'required',
             'student_nis'=> 'required',
             'teacher_nip'=> 'required',
-            'form_of_foul_id'=> 'required'
+            'form_of_foul_id'=> 'required',
+            'status'=> 'required'
         ]);
         if($validator->fails()){
             return $this->sendError('Validation Error.', $validator->errors());
         }
+        if ($request->hasFile('photo')) {
+            $image_path = $request->file('photo')->store('assets/images/student', 'public');
+            $input['photo'] = $image_path;
+        }
+        $studentWithParent = DB::table('students')
+            ->join('parents', 'students.id_parent', '=', 'parents.id')
+            ->select('students.*', 'parents.*')
+            ->where('students.nis', $input['student_nis'])
+            ->first();
+
+        $formlOfFoul = FormOfFoul::find($input['form_of_foul_id']);
+
+
         $foul = Foul::create($input);
+
+
+
         if ($foul){
+            $curl = curl_init();
+
+            $fullImagePath = public_path('storage/' . $image_path);
+
+            $target = $studentWithParent->phone_number;
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => 'Pelanggaran:' . ' ' .$formlOfFoul->name.' '.'Point:'.' '.$formlOfFoul->point,
+                    'url' =>'https://static.vecteezy.com/system/resources/thumbnails/023/654/784/small/golden-logo-template-free-png.png',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    "Authorization: fgopvgfewg_NYkr2HyFF"
+                ),
+            ));
+
+
+            $response = curl_exec($curl);
+
+            curl_close($curl);
             return response()->json([
                 "success" => true,
                 "message" => "Foul created successfully.",
@@ -76,6 +139,14 @@ class FoulController extends Controller
                 ]
             );
         }
+    }
+    public function sendError($message, $data = [])
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => $data,
+        ], Response::HTTP_BAD_REQUEST);
     }
     public function show($id)
     {
@@ -118,6 +189,7 @@ class FoulController extends Controller
             "data" => $foul
         ]);
     }
+
     public function destroy(Foul $foul)
     {
         $foul->delete();

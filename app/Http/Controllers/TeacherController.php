@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class TeacherController extends Controller
 {
@@ -47,12 +49,48 @@ class TeacherController extends Controller
 //        Teacher::create($data);
         $teacher->nip = $request->get('nip');
         $teacher->name = $request->get('name');
-        $teacher->password = \Hash::make($request->get('password'));
+        $teacher->password = $request->get('password');
         $teacher->position = $request->get('position');
         $teacher->gender = $request->get('gender');
         $teacher->phone_number = $request->get('phone');
         $teacher->date_and_place_of_birth = $request->get('date');
         $teacher->address = $request->get('address');
+        if ($request->hasFile('profile_photo_path')) {
+            $file = $request->file('profile_photo_path');
+            $filename = $request->get('nip') . '.' . $file->getClientOriginalExtension();
+            $image_path = $request->file('profile_photo_path')->storeAs('assets/images/teacher', $filename ,'public');
+            $teacher->profile_photo_path = $image_path;
+        }
+
+        $curl = curl_init();
+
+        $target = $request->get('phone');
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+                'target' => $target,
+                'message' => 'Password:' . ' ' .$request->get('password'),
+            ),
+            CURLOPT_HTTPHEADER => array(
+                "Authorization: fgopvgfewg_NYkr2HyFF"
+            ),
+        ));
+
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        $teacher->password = Hash::make($request->get('password'));
+
         $teacher->save();
         return redirect()->route('teacher.index');
 //        $data['picturePath'] = $request->file('picturePath')->store('assets/user', 'public');
@@ -99,12 +137,23 @@ class TeacherController extends Controller
         $teacher = Teacher::findOrFail($id);
         $teacher->nip = $request->get('nip');
         $teacher->name = $request->get('name');
-        $teacher->password = Hash::make($request->get('password'));
+//        $teacher->password = Hash::make($request->get('password'));
         $teacher->position = $request->get('position');
         $teacher->gender = $request->get('gender');
         $teacher->phone_number = $request->get('phone');
         $teacher->date_and_place_of_birth = $request->get('date');
         $teacher->address = $request->get('address');
+
+        if ($request->file('profile_photo_path')) {
+            if($teacher->profile_photo_path && file_exists(storage_path('app/public/' .
+                    $teacher->profile_photo_path))){
+                \Storage::delete('public/' . $teacher->profile_photo_path);
+            }
+            $file = $request->file('profile_photo_path');
+            $filename = $request->get('nip') . '.' . $file->getClientOriginalExtension();
+            $image_path = $request->file('profile_photo_path')->storeAs('assets/images/teacher', $filename ,'public');
+            $teacher->profile_photo_path = $image_path;
+        }
         $teacher->save();
 //        return redirect()->route('teacher.index');
         return redirect()->route('teacher.index')->with('status', 'Edit succesfully updated');
@@ -119,6 +168,7 @@ class TeacherController extends Controller
     public function destroy(Teacher $teacher)
     {
         //
+        Storage::delete('public/' . $teacher->profile_photo_path);
         $teacher->delete();
 
         return redirect()->route('teacher.index');

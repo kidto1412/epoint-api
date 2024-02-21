@@ -13,7 +13,7 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-jet-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        {{ __('Home') }}
                     </x-jet-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
@@ -36,11 +36,11 @@
                         {{ __('Class') }}
                     </x-jet-nav-link>
                 </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-jet-nav-link href="/dashboard/foul" :active="request()->routeIs('dashboard/foul')">
-                        {{ __('Foul') }}
-                    </x-jet-nav-link>
-                </div>
+{{--                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">--}}
+{{--                    <x-jet-nav-link href="/dashboard/foul" :active="request()->routeIs('dashboard/foul')">--}}
+{{--                        {{ __('Foul') }}--}}
+{{--                    </x-jet-nav-link>--}}
+{{--                </div>--}}
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-jet-nav-link href="/dashboard/category" :active="request()->routeIs('dashboard/category')">
                         {{ __('Foul Category') }}
@@ -48,7 +48,12 @@
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-jet-nav-link href="/dashboard/form" :active="request()->routeIs('dashboard/form')">
-                        {{ __('FormFoul') }}
+                        {{ __('Form Of Foul') }}
+                    </x-jet-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-jet-nav-link href="/dashboard/foul" :active="request()->routeIs('dashboard/foul')">
+                        {{ __('Foul') }}
                     </x-jet-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">

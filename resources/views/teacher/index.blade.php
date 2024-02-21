@@ -16,9 +16,10 @@
                 <table class="table-auto w-full">
                     <thead>
                     <tr>
+                        <th class="border px-6 py-4">Profile</th>
                         <th class="border px-6 py-4">NIS</th>
                         <th class="border px-6 py-4">Name</th>
-                        <th class="border px-6 py-4">Gender</th>
+{{--                        <th class="border px-6 py-4">Gender</th>--}}
                         <th class="border px-6 py-4">Phone Number</th>
                         <th class="border px-6 py-4">Gender</th>
                         <th class="border px-6 py-4">position</th>
@@ -28,9 +29,12 @@
                     <tbody>
                     @forelse($teacher as $item)
                         <tr>
+                            <td class="border px-6 py-4">
+                                <img src="{{ asset('storage/'.$item->profile_photo_path) }}" class="img-fluid img-thumbnail" width="150">
+                            </td>
                             <td class="border px-6 py-4">{{ $item->nip }}</td>
                             <td class="border px-6 py-4 ">{{ $item->name }}</td>
-                            <td class="border px-6 py-4">{{ $item->name }}</td>
+{{--                            <td class="border px-6 py-4">{{ $item->name }}</td>--}}
                             <td class="border px-6 py-4">{{ $item->phone_number }}</td>
                             <td class="border px-6 py-4">{{ $item->gender }}</td>
                             <td class="border px-6 py-4">{{ $item->position }}</td>
@@ -56,7 +60,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="text-center mt-5" style="background-color: red">
+            <div class="text-center mt-5" >
                 {{ $teacher->links() }}
 {{--                {{$teacher->appends(Request::all())->links()}}--}}
             </div>

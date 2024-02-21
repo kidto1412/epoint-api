@@ -16,6 +16,7 @@
                 <table class="table-auto w-full">
                     <thead>
                     <tr>
+                        <th class="border px-6 py-4">Profile</th>
                         <th class="border px-6 py-4">NIP</th>
                         <th class="border px-6 py-4">Name</th>
                         <th class="border px-6 py-4">Gender</th>
@@ -26,6 +27,10 @@
                     <tbody>
                     @forelse($student as $item)
                         <tr>
+                            <td class="border px-6 py-4">
+
+                                <img src="{{ asset('assets/'.'user.png') }}" class="img-fluid img-thumbnail" width="50">
+                            </td>
                             <td class="border px-6 py-4">{{ $item->nis }}</td>
                             <td class="border px-6 py-4 ">{{ $item->name }}</td>
                             <td class="border px-6 py-4">{{ $item->gender }}</td>
@@ -40,6 +45,7 @@
                                         Delete
                                     </button>
                                 </form>
+                                <a href="{{ route('student.detail', ['nis' => $item->nis]) }}">Detail</a>
                             </td>
                         </tr>
                     @empty

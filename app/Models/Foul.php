@@ -11,7 +11,7 @@ class Foul extends Model
     use HasFactory;
 //    protected $keyType = 'string';
     protected $fillable = [
-       'id','time', 'date','description','student_nis','teacher_nip','form_of_foul_id',
+       'id','time', 'date','description','student_nis','teacher_nip','form_of_foul_id','status','photo',
     ];
     public function student()
     {

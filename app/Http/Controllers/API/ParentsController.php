@@ -6,9 +6,11 @@ use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
 use App\Models\Major;
 use App\Models\Parents;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -53,8 +55,10 @@ class ParentsController extends Controller
             $tokenResult = $parent->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
+                'role' => 'parent',
                 'token_type' => 'Bearer',
                 'data' => $parent
+
             ],'Authenticated');
         } catch (Exception $error) {
             return ResponseFormatter::error([
@@ -84,7 +88,7 @@ class ParentsController extends Controller
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
                 'token_type' => 'Bearer',
-                'data' => $parent,
+                'parent' => $parent,
             ],'Parent Registered');
         } catch (Exception $error) {
             return ResponseFormatter::error([
@@ -113,6 +117,7 @@ class ParentsController extends Controller
             $request->validate([
                 'name' => 'required',
                 'username' => 'required',
+                'password' => 'required',
                 'date_and_place_of_birth' => 'required',
                 'phone_number'=> 'required',
                 'address'=> 'required'
@@ -192,16 +197,16 @@ class ParentsController extends Controller
     {
         //
         $input = $request->all();
-        $validator = Validator::make($input, [
-            'name' => 'required',
-            'username' => 'required',
-            'date_and_place_of_birth' => 'required',
-            'phone_number'=> 'required',
-            'address'=> 'required'
-        ]);
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
+//        $validator = Validator::make($input, [
+//            'name' => 'required',
+//            'username' => 'required',
+//            'date_and_place_of_birth' => 'required',
+//            'phone_number'=> 'required',
+//            'address'=> 'required'
+//        ]);
+//        if($validator->fails()){
+//            return $this->sendError('Validation Error.', $validator->errors());
+//        }
         $parent->name = $input['name'];
         $parent->username = $input['username'];
         $parent->date_and_place_of_birth = $input['date_and_place_of_birth'];
@@ -214,6 +219,8 @@ class ParentsController extends Controller
             "data" => $parent
         ]);
     }
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -230,5 +237,73 @@ class ParentsController extends Controller
             "message" => "Parent deleted successfully.",
             "data" => $parent
         ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $this->validate($request, [
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|different:current_password',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        // Memeriksa apakah password saat ini benar
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Current password is wrong.'],
+            ])->status(401);
+        }
+
+        // Mengubah password pengguna
+        $user->password = Hash::make($request->new_password);
+        $token = $request->user()->currentAccessToken()->delete();
+        $user->save();
+//        "status" => 'success',
+//                'message_token' => $token,
+//                'message' => 'Update Password Success.',
+//                'data'=> $user
+        return response()->json(
+            [
+                'meta' => [
+                    'code' => 200,
+                    'status' => 'success',
+                    'message' => 'Update Password Success',
+                ],
+                'data' =>  $user,
+            ],200
+        );
+
+
+    }
+
+    public function updatePhoto(Request $request, Parents $parent)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|image|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseFormatter::error(['error'=>$validator->errors()], 'Update Photo Fails', 401);
+        }
+
+        if ($request->file('file')) {
+
+            $file = $request->file->store('assets/images/parent', 'public');
+
+            //store your file into database
+            $parent->profile_photo_path = $file;
+            $parent->update();
+
+            return ResponseFormatter::success([$file],'File successfully uploaded');
+        }
+    }
+
+
+    public function logout(Request $request, Student $student)
+    {
+        $token = $request->user()->currentAccessToken()->delete();
+        return ResponseFormatter::success($token,'Token Revoked');
     }
 }

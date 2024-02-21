@@ -11,6 +11,7 @@ use App\Helpers\ResponseFormatter;
 use App\Models\Student;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 class StudentController extends Controller
@@ -41,18 +42,37 @@ class StudentController extends Controller
 //                ],'Authentication Failed', 500);
 //            }
 
-            $student = Student::where('nis', $request->nis)->first();
+            $student = Student::where('nis', $request->nis)
+                ->with('class.major','parent', 'violations.form.category', 'violations.teacher')
+                ->first();
 
             if (!$student || !Hash::check($request->password, $student->password, [])) {
                 throw new \Exception('Invalid Credentials');
             }
-
+            $totalPoint = 0;
+            foreach ($student->violations as $violation){
+//
+                $point = $violation->form->point;
+                $totalPoint +=  $point;
+            }
 
             $tokenResult = $student->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
                 'access_token' => $tokenResult,
+                'role' => 'student',
                 'token_type' => 'Bearer',
-                'student' => $student
+                'student' => [
+                    'nis' => $student->nis,
+                    'name' => $student->name,
+                    'parent_name' => $student->parent->name,
+                    'gender' => $student->gender,
+                    'address' => $student->address,
+                    'class' => $student->class->grade,
+                    'major' => $student->class->major->name,
+                    'profile_photo_path' => $student->profile_photo_path,
+                    'fouls' => $this->formatViolations($student->violations),
+                    "total_point" => $totalPoint
+                ]
             ],'Authenticated');
         } catch (Exception $error) {
             return ResponseFormatter::error([
@@ -135,22 +155,97 @@ class StudentController extends Controller
         );
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request, Student $student)
     {
-        $token = $request->student()->currentAccessToken()->delete();
-
+        $token = $request->user()->currentAccessToken()->delete();
         return ResponseFormatter::success($token,'Token Revoked');
     }
     public function index(Request $request)
     {
-        //
-        $student = Student::paginate(5);
-        return response()->json([
-            "success" => true,
-            "message" => "Student List",
-            "data" => $student
-        ]);
+        $student = Student::query()->with(['class.major','parent',  'violations' => function ($query) {
+        $query->where('status', 'SUCCESS');},'violations.form.category', 'violations.teacher']);
+
+        $studentsData = $student->paginate(20);
+//        dd($studentsData);
+
+        $studentsData->getCollection()->transform(function ($student) {
+//            dd($student->violations);
+            $totalPoint = $student->violations->sum(function ($violation) {
+
+                if ($violation->status =='SUCCESS'){
+                    return $violation->form->point;
+                }
+            });
+            $student->total_point = $totalPoint;
+            return $student;
+        });
+
+        return ResponseFormatter::success(
+            $studentsData,
+            'Foul list get successed'
+        );
     }
+    public function studentByParent($id_parent)
+    {
+        $student = Student::query()
+            ->where('id_parent', $id_parent)
+            ->with('class.major','parent', 'violations.form.category', 'violations.teacher')->get();
+//        $studentsData = $student->paginate(5);
+
+        $student->transform(function ($student) {
+            $totalPoint = $student->violations->sum(function ($violation) {
+                return $violation->form->point;
+            });
+
+            $student->total_point = $totalPoint;
+            return $student;
+        });
+        return ResponseFormatter::success(
+            $student,
+            'student list get successed'
+        );
+    }
+    public function top(Request $request)
+    {
+        //
+        $student = Student::query()->with('class.major','parent', 'violations.form.category', 'violations.teacher');
+        $studentsData = $student->paginate(5);
+
+        $studentsData->getCollection()->transform(function ($student) {
+            $totalPoint = $student->violations->sum(function ($violation) {
+                return $violation->form->point;
+            });
+
+            $student->total_point = $totalPoint;
+            return $student;
+        });
+        return ResponseFormatter::success(
+            $studentsData,
+            'Foul list get successed'
+        );
+    }
+
+    public function pointClass(Request $request)
+    {
+        //
+        $student = Student::query()->with('class.major','parent', 'violations.form.category', 'violations.teacher');
+        $studentsData = $student->paginate(5);
+
+        $studentsData->getCollection()->transform(function ($student) {
+            $totalPoint = $student->violations->sum(function ($violation) {
+                return $violation->form->point;
+            });
+
+            $student->total_point = $totalPoint;
+            return $student;
+        });
+        return ResponseFormatter::success(
+            $studentsData,
+            'Foul list get successed'
+        );
+    }
+
+
     public function store(Request $request)
     {
         //
@@ -255,72 +350,7 @@ class StudentController extends Controller
         $student = Student::where('nis', $nis)
             ->with('class.major','parent', 'violations.form.category', 'violations.teacher')
             ->first();
-
-//        foreach ($student->violations as $violation) {
-//            $point = $violation->form->point;
-//
-//            switch ($violation->form->category_foul_id) {
-//                case 'FC01':
-//                    if ($point == 100) {
-//                        $spPoint += 100;
-//                    } else if ($point == 50) {
-//                        $spPoint += 50;
-//                    } else if ($point == 30) {
-//                        $spPoint += 30;
-//                    } else if ($point == 15) {
-//                        $spPoint += 15;
-//                    } else if ($point == 10) {
-//                        $spPoint += 10;
-//                    } else if ($point == 5) {
-//                        $spPoint += 5;
-//                    }
-//                    break;
-//
-//                case 'FC02':
-//                    if ($point == 100) {
-//                        $kjPoint += 100;
-//                    } else if ($point == 50) {
-//                        $kjPoint += 50;
-//                    } else if ($point == 30) {
-//                        $kjPoint += 30;
-//                    } else if ($point == 15) {
-//                        $kjPoint += 15;
-//                    } else if ($point == 10) {
-//                        $kjPoint += 10;
-//                    } else if ($point == 5) {
-//                        $kjPoint += 5;
-//                    }
-//                    break;
-//
-//                case 'FC03':
-//                    if ($point == 100) {
-//                        $kpPoint += 100;
-//                    } else if ($point == 50) {
-//                        $kpPoint += 50;
-//                    } else if ($point == 30) {
-//                        $kpPoint += 30;
-//                    } else if ($point == 15) {
-//                        $kpPoint += 15;
-//                    } else if ($point == 10) {
-//                        $kpPoint += 10;
-//                    } else if ($point == 5) {
-//                        $kpPoint += 5;
-//                    }
-//                    break;
-//            }
-//        }
-//        $totalPoint = ($spPoint * 0.5) + ($kjPoint * 0.25) + ($kpPoint * 0.25);
-
-//        $totalPoint += student->violations->point * $student->violationType->violationCategory->weight;
         foreach ($student->violations as $violation){
-//            $weight = 0;
-//            if ($violation->form->category_foul_id == 'FC01'){
-//                $weight = $bobot_sp;
-//            } elseif ($violation->form->category_foul_id == 'FC02'){
-//                $weight = $bobot_kj;
-//            } elseif ($violation->form->category_foul_id == 'FC03'){
-//                $weight = $bobot_kp ;
-//            }
             $point = $violation->form->point;
             $totalPoint +=  $point;
         }
@@ -345,34 +375,6 @@ class StudentController extends Controller
 
     public function getDataStudents()
     {
-//
-//        $students = Student::with('class.major','parent', 'violations.form.category', 'violations.teacher')
-//            ->get();
-//
-//        $formatted_students = [];
-//
-//        foreach ($students as $student){
-//            $totalPoint = 0;
-//            foreach ($student->violations as $violation){
-//                $point = $violation->form->point;
-//                $totalPoint +=  $point;
-//            }
-//            $formatted_students[] = [
-//                'nis' => $student->nis,
-//                'name' => $student->name,
-//                'parent_name' => $student->parent->name,
-//                'class' => $student->class->grade,
-//                'major' => $student->class->major->name,
-//                'total_point' => $totalPoint,
-//                'fouls' => $this->formatViolations($student->violations),
-//            ];
-//        }
-//
-//        return response()->json([
-//            "success" => true,
-//            "message" => "Data Student",
-//            "data" => $formatted_students,
-//        ]);
 
         // Verifikasi bahwa user autentikasi adalah siswa
         if (Auth::guard('students')->check()) {
@@ -391,6 +393,9 @@ class StudentController extends Controller
         $formatted = [];
 
         foreach ($violations as $violation) {
+            if ($violation->status =='SUCCESS'){
+
+
             $formatted[] = [
                 'id' => $violation->id,
                 'date' => $violation->date,
@@ -401,9 +406,10 @@ class StudentController extends Controller
                 'category' => $violation->form->category->name,
                 'teacher_name' => $violation->teacher->name,
                 'teacher_nip' => $violation->teacher->nip,
+                'status' => $violation->status
             ];
+            }
         }
-
         return $formatted;
     }
 
@@ -417,36 +423,82 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         //
-        $input = $request->all();
-        $validator = Validator::make($input, [
-            'nis' => 'required',
-            'name' => 'required',
-            'password' => 'required',
-            'date_and_place_of_birth'=> 'required',
-            'gender'=> 'required',
-            'phone_number'=> 'required',
-            'address'=> 'required',
-
-        ]);
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-        $student->nis = $input['nis'];
-        $student->name = $input['name'];
-        $student->password = $input['password'];
-        $student->date_and_place_of_birth = $input['date_and_place_of_birth'];
-        $student->gender = $input['gender'];
-        $student->phone_number = $input['phone_number'];
-        $student->address = $input['address'];
-        $student->profile_photo_path = $input['profile_photo_path'];
-        $student->id_parent = $input['id_parent'];
-        $student->id_class_room = $input['id_class_room'];
-        $student->save();
+        $student->update($request->all());
         return response()->json([
             "success" => true,
             "message" => "Student updated successfully.",
             "data" => $student
         ]);
+    }
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $this->validate($request, [
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|different:current_password',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        // Memeriksa apakah password saat ini benar
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Current password is wrong.'],
+            ])->status(401);
+        }
+
+        // Mengubah password pengguna
+        $user->password = Hash::make($request->new_password);
+        $token = $request->user()->currentAccessToken()->delete();
+        $user->save();
+//        "status" => 'success',
+//                'message_token' => $token,
+//                'message' => 'Update Password Success.',
+//                'data'=> $user
+        return response()->json(
+            [
+                'meta' => [
+                    'code' => 200,
+                    'status' => 'success',
+                    'message' => 'Update Password Success',
+                ],
+                'data' =>  $user,
+            ],200
+        );
+
+
+    }
+    public function updateProfile(Request $request)
+    {
+        $data = $request->all();
+
+        $user = Auth::user();
+        $user->update($data);
+
+        return ResponseFormatter::success($user,'Profile Updated');
+    }
+
+
+    public function updatePhoto(Request $request, Student $student)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|image|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseFormatter::error(['error'=>$validator->errors()], 'Update Photo Fails', 401);
+        }
+
+        if ($request->file('file')) {
+
+            $file = $request->file->store('assets/images/student', 'public');
+
+            //store your file into database
+            $student->profile_photo_path = $file;
+            $student->update();
+
+            return ResponseFormatter::success([$file],'File successfully uploaded');
+        }
     }
 
     /**
@@ -464,6 +516,20 @@ class StudentController extends Controller
             "message" => "Student deleted successfully.",
             "data" => $student
         ]);
+    }
+
+    public function getMyParent($nis){
+        $studentWithParent = DB::table('students')
+            ->join('parents', 'students.id_parent', '=', 'parents.id')
+            ->select('students.*', 'parents.*')
+            ->where('students.nis', $nis)
+            ->first();
+
+//        return $studentWithParent;
+        return ResponseFormatter::success(
+            $studentWithParent,
+            'my parents',
+        );
     }
 
 

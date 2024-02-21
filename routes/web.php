@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth/login');
 });
 Route::get('/debug-sentry', function () {
     throw new Exception('My first Sentry error!');
@@ -46,8 +46,11 @@ Route::prefix('dashboard')
         Route::resource('parent', \App\Http\Controllers\ParentController::class);
         Route::resource('form',\App\Http\Controllers\FormOfFoulController::class);
         Route::resource('foul',\App\Http\Controllers\FoulController::class);
+        Route::put('approve/foul/{id}',[\App\Http\Controllers\FoulController::class, 'approveFoul']);
+        Route::put('reject/foul/{id}',[\App\Http\Controllers\FoulController::class, 'rejectFoul']);
         Route::resource('student',\App\Http\Controllers\StudentController::class);
         Route::resource('teacher',\App\Http\Controllers\TeacherController::class);
+        Route::get('detail/student/{nis}', [\App\Http\Controllers\StudentController::class,'show'])->name('student.detail');
     });
 
 

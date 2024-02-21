@@ -50,12 +50,17 @@ class FormOfFoulController extends Controller
     }
     public function index(Request $request)
     {
-        $formlOfFoul = FormOfFoul::all();
-        return response()->json([
-            "success" => true,
-            "message" => "Foul List",
-            "data" => $formlOfFoul
-        ]);
+        $limit = $request->input('limit',20);
+        $formlOfFoul = FormOfFoul::query()->with('category');
+//        return response()->json([
+//            "success" => true,
+//            "message" => "Foul List",
+//            "data" => $formlOfFoul->paginage($limit)
+//        ]);
+        return ResponseFormatter::success(
+            $formlOfFoul->get(),
+            'Foul list get successed'
+        );
     }
     public function store(Request $request)
     {
