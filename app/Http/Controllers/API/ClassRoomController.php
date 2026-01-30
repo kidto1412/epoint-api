@@ -178,7 +178,7 @@ class ClassRoomController extends Controller
 
         // Calculate vector V for each class
         $classRooms->each(function ($classRoom) use ($sumVectorS) {
-            dd($classRoom);
+
             if ($sumVectorS != 0){
             $classRoom->vectorV = $classRoom->vectorS / $sumVectorS;
             }
