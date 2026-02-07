@@ -286,26 +286,28 @@ class TeacherController extends Controller
 
         $image = $request->file('image');
         $imagePath = $image->store('temp');
+      
+       
 
-        // Pastikan file match_face.py berada di root project Laravel
         $scriptPython = base_path('match_face.py');
 
-        // Pastikan Anda telah melakukan konfigurasi filesystem agar dapat menggunakan storage_path() dengan benar
+       
         $fullImagePath = storage_path('app/' . $imagePath);
-//        dd($fullImagePath);
+        $python = base_path('venv/bin/python3');
 
-        // Panggil script Python menggunakan perintah shell_exec (atau bisa menggunakan Process)
-        $command = "python ". $scriptPython. " ". str_replace('/', '\\', $fullImagePath);
-//        dd($command);
-        $output = shell_exec($command . " 2>&1");
-//        dd($output);
-        // Output dari script Python berupa string JSON, jika benar
+      
+        $role = 'teacher';
+        $command = $python . " " .
+           escapeshellarg($scriptPython) . " " .
+           escapeshellarg($fullImagePath). " ".
+           escapeshellarg($role);
+           
+
+      
+        $output = shell_exec($command);
         $result = json_decode($output, true);
-//        dd($result);
-        // Menghapus gambar dari penyimpanan sementara (jika diperlukan)
          Storage::delete($imagePath);
-
-        // Mengembalikan hasil dari script Python sebagai respons API
+   
         return response()->json(['result' => $result]);
     }
 

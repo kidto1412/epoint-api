@@ -36,11 +36,7 @@ class StudentController extends Controller
                 'password' => ['required', 'string'],
             ]);
 
-//            if (!Auth::attempt($credentials)) {
-//                return ResponseFormatter::error([
-//                    'message' => 'Unauthorized'
-//                ],'Authentication Failed', 500);
-//            }
+
 
             $student = Student::where('nis', $request->nis)
                 ->with('class.major','parent', 'violations.form.category', 'violations.teacher')
@@ -49,12 +45,11 @@ class StudentController extends Controller
             if (!$student || !Hash::check($request->password, $student->password, [])) {
                 throw new \Exception('Invalid Credentials');
             }
-            $totalPoint = 0;
-            foreach ($student->violations as $violation){
-//
-                $point = $violation->form->point;
-                $totalPoint +=  $point;
-            }
+            $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
+                    return $violation->form->point;
+            });
 
             $tokenResult = $student->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
@@ -170,11 +165,10 @@ class StudentController extends Controller
 
         $studentsData->getCollection()->transform(function ($student) {
 //            dd($student->violations);
-            $totalPoint = $student->violations->sum(function ($violation) {
-
-                if ($violation->status =='SUCCESS'){
+             $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
                     return $violation->form->point;
-                }
             });
             $student->total_point = $totalPoint;
             return $student;
@@ -188,13 +182,17 @@ class StudentController extends Controller
     public function studentByParent($id_parent)
     {
         $student = Student::query()
-            ->where('id_parent', $id_parent)
-            ->with('class.major','parent', 'violations.form.category', 'violations.teacher')->get();
+            ->where('id_parent', $id_parent,)
+            ->with(['class.major','parent', 'violations' => function ($query) {
+                $query->where('status', 'SUCCESS');
+            }, 'violations.form.category', 'violations.teacher'])->get();
 //        $studentsData = $student->paginate(5);
 
         $student->transform(function ($student) {
-            $totalPoint = $student->violations->sum(function ($violation) {
-                return $violation->form->point;
+           $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
+                    return $violation->form->point;
             });
 
             $student->total_point = $totalPoint;
@@ -212,8 +210,10 @@ class StudentController extends Controller
         $studentsData = $student->paginate(5);
 
         $studentsData->getCollection()->transform(function ($student) {
-            $totalPoint = $student->violations->sum(function ($violation) {
-                return $violation->form->point;
+            $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
+                    return $violation->form->point;
             });
 
             $student->total_point = $totalPoint;
@@ -232,8 +232,10 @@ class StudentController extends Controller
         $studentsData = $student->paginate(5);
 
         $studentsData->getCollection()->transform(function ($student) {
-            $totalPoint = $student->violations->sum(function ($violation) {
-                return $violation->form->point;
+             $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
+                    return $violation->form->point;
             });
 
             $student->total_point = $totalPoint;
@@ -350,10 +352,11 @@ class StudentController extends Controller
         $student = Student::where('nis', $nis)
             ->with('class.major','parent', 'violations.form.category', 'violations.teacher')
             ->first();
-        foreach ($student->violations as $violation){
-            $point = $violation->form->point;
-            $totalPoint +=  $point;
-        }
+        $totalPoint = $student->violations
+                ->where('status', 'SUCCESS')
+                ->sum(function ($violation) {
+                    return $violation->form->point;
+            });
         return response()->json([
             "success" => true,
             "message" => "Data Student",
@@ -530,6 +533,39 @@ class StudentController extends Controller
             $studentWithParent,
             'my parents',
         );
+    }
+
+     public function recognize (Request $request){
+        // Menyimpan gambar dari permintaan ke penyimpanan sementara
+//        $request->validate([
+//            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Sesuaikan dengan jenis gambar yang diizinkan dan batasan ukuran
+//        ]);
+
+        $image = $request->file('image');
+        $imagePath = $image->store('temp');
+      
+       
+
+        $scriptPython = base_path('match_face.py');
+
+       
+        $fullImagePath = storage_path('app/' . $imagePath);
+        $python = base_path('venv/bin/python3');
+
+      
+        $role = 'student';
+        $command = $python . " " .
+           escapeshellarg($scriptPython) . " " .
+           escapeshellarg($fullImagePath). " ".
+           escapeshellarg($role);
+           
+
+      
+        $output = shell_exec($command);
+        $result = json_decode($output, true);
+         Storage::delete($imagePath);
+   
+        return response()->json(['result' => $result]);
     }
 
 

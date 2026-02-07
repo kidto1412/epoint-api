@@ -77,10 +77,10 @@ class TeacherController extends Controller
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array(
                 'target' => $target,
-                'message' => 'Password:' . ' ' .$request->get('password'),
+                'message' => 'NIP:' . ' ' .$request->get('nip'). 'Password:' . ' ' .$request->get('password'),
             ),
             CURLOPT_HTTPHEADER => array(
-                "Authorization: fgopvgfewg_NYkr2HyFF"
+                "Authorization: 2rckSdktSzAJEWJzVPp8s"
             ),
         ));
 

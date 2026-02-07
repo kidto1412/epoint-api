@@ -28,6 +28,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('parents', \App\Http\Controllers\API\ParentsController::class);
 
     Route::resource('foul',\App\Http\Controllers\API\FoulController::class);
+    Route::post('/foul/{id}/approve', [\App\Http\Controllers\API\FoulController::class, 'approve']);
+    Route::get('submitted-foul',[\App\Http\Controllers\API\FoulController::class, 'submittedList']);
+     Route::get('report',[\App\Http\Controllers\API\FoulController::class, 'reportPdf']);
     Route::resource('student/all',\App\Http\Controllers\API\StudentController::class);
     Route::resource('teachers',\App\Http\Controllers\API\TeacherController::class);
     Route::get('student/{nis}',[\App\Http\Controllers\API\StudentController::class,'getStudentData']);
@@ -50,7 +53,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::resource('form-of-foul',\App\Http\Controllers\API\FormOfFoulController::class);
 Route::resource('students',\App\Http\Controllers\API\StudentController::class);
+Route::post('students/face-matching', [\App\Http\Controllers\API\StudentController::class, 'recognize']);
 Route::get('class/point',[\App\Http\Controllers\API\ClassRoomController::class,'pointClass']);
+Route::get('classrooms/report-list',[\App\Http\Controllers\API\ClassRoomController::class,'listForReport']);
 Route::get('class/point2',[\App\Http\Controllers\API\ClassRoomController::class,'pointClass2']);
 Route::get('class/point4',[\App\Http\Controllers\API\ClassRoomController::class,'pointClas4']);
 Route::get('class/point/{classRoomCode}',[\App\Http\Controllers\API\ClassRoomController::class,'pointClass3']);

@@ -63,7 +63,20 @@ class StudentController extends Controller
         $student->id_parent = $request->get('id_parent');
         $student->id_class_room = $request->get('id_class');
         if ($request->hasFile('profile_photo_path')) {
-            $image_path = $request->file('profile_photo_path')->store('assets/images/student', 'public');
+           $file = $request->file('profile_photo_path');
+
+            $extension = $file->getClientOriginalExtension();
+
+            // nama file = NIS + extension
+            $fileName = $request->get('nis') . '.' . $extension;
+
+            // simpan dengan nama custom
+            $image_path = $file->storeAs(
+                'assets/images/student',
+                $fileName,
+                'public'
+            );
+
             $student->profile_photo_path = $image_path;
         }
 
@@ -83,10 +96,10 @@ class StudentController extends Controller
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array(
                 'target' => $target,
-                'message' => 'Password:' . ' ' .$request->get('password'),
+                'message' => 'NIS:'. ' '.$request->get('nis'). 'Password:' . ' ' .$request->get('password'),
             ),
             CURLOPT_HTTPHEADER => array(
-                "Authorization: fgopvgfewg_NYkr2HyFF"
+                "Authorization: 2rckSdktSzAJEWJzVPp8"
             ),
         ));
 

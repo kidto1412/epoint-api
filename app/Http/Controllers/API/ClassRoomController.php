@@ -136,7 +136,14 @@ class ClassRoomController extends Controller
             'Kerajinan' => 0.25,
         ];
 
-        $classRooms = ClassRoom::with('major')->get();
+        $classRooms = ClassRoom::with([
+            'major',
+            'students.violations' => function ($query) {
+                $query->where('status', 'SUCCESS')
+                    ->with('form.category');
+            }
+        ])->get();
+
 
         $allVectorS = [];
 
@@ -148,7 +155,7 @@ class ClassRoomController extends Controller
             ];
 
             $classRoom->students->each(function ($student) use ($categoryWeights, &$totalPoints) {
-                $student->violations->each(function ($violation) use ($categoryWeights, &$totalPoints) {
+                $student->violations->where('status','SUCCESS')->each(function ($violation) use ($categoryWeights, &$totalPoints) {
 //
 
                         $category = $violation->form->category->name;
@@ -314,4 +321,22 @@ class ClassRoomController extends Controller
 
         return $categoryWeights[$category] ?? 0;
     }
+    public function listForReport()
+{
+    $classRooms = ClassRoom::with('major')
+        ->get()
+        ->map(function ($classRoom) {
+            return [
+                'id' => $classRoom->id,
+                'class_name' => $classRoom->grade . ' ' . $classRoom->major->name
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'message' => 'List kelas untuk report',
+        'data' => $classRooms
+    ]);
+}
+
 }

@@ -30,6 +30,7 @@
                     @forelse($teacher as $item)
                         <tr>
                             <td class="border px-6 py-4">
+                           {{ asset('storage/'.$item->profile_photo_path) }}
                                 <img src="{{ asset('storage/'.$item->profile_photo_path) }}" class="img-fluid img-thumbnail" width="150">
                             </td>
                             <td class="border px-6 py-4">{{ $item->nip }}</td>
